@@ -1,12 +1,12 @@
 steps:
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['pull', 'gcr.io/$PROJECT_ID/steamwheedle-cartel/run-workload/build:latest']
+#  - name: 'gcr.io/cloud-builders/docker'
+#    args: ['pull', 'gcr.io/$PROJECT_ID/steamwheedle-cartel/run-workload/build:latest']
   - name: 'gcr.io/cloud-builders/docker'
     args: [
       'build',
       '-f', './build-env.Dockerfile',
       '-t', 'gcr.io/$PROJECT_ID/steamwheedle-cartel/run-workload/build',
-      '--cache-from', 'gcr.io/$PROJECT_ID/steamwheedle-cartel/run-workload/build:latest',
+#      '--cache-from', 'gcr.io/$PROJECT_ID/steamwheedle-cartel/run-workload/build:latest',
       '.'
     ]
   - name: 'gcr.io/cloud-builders/docker'
@@ -16,14 +16,14 @@ steps:
       'steamwheedle-cartel/run-workload/build'
     ]
 
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['pull', 'gcr.io/$PROJECT_ID/steamwheedle-cartel/run-workload/runtime:latest']
+#  - name: 'gcr.io/cloud-builders/docker'
+#    args: ['pull', 'gcr.io/$PROJECT_ID/steamwheedle-cartel/run-workload/runtime:latest']
   - name: 'gcr.io/cloud-builders/docker'
     args: [
       'build',
       '-f', './runtime-env.Dockerfile',
       '-t', 'gcr.io/$PROJECT_ID/steamwheedle-cartel/run-workload/runtime',
-      '--cache-from', 'gcr.io/$PROJECT_ID/steamwheedle-cartel/run-workload/runtime:latest',
+#      '--cache-from', 'gcr.io/$PROJECT_ID/steamwheedle-cartel/run-workload/runtime:latest',
       '.'
     ]
   - name: 'gcr.io/cloud-builders/docker'
