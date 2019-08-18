@@ -102,6 +102,16 @@ func main() {
 			return
 		}
 	})
+	r.HandleFunc("/ping", func(w http.ResponseWriter, r *http.Request) {
+		logging.Info("Received request on ping route")
+
+		w.WriteHeader(http.StatusOK)
+		if _, err := fmt.Fprint(w, "Pong!"); err != nil {
+			logging.WithField("error", err.Error()).Error("Failed to return response")
+
+			return
+		}
+	})
 	r.HandleFunc("/compute-pricelist-histories", func(w http.ResponseWriter, r *http.Request) {
 		logging.Info("Received request")
 
