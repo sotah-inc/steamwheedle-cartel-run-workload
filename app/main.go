@@ -93,6 +93,8 @@ func init() {
 func main() {
 	r := mux.NewRouter()
 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		logging.Info("Received request on home route")
+
 		w.WriteHeader(http.StatusOK)
 		if _, err := fmt.Fprint(w, "Hello, world!"); err != nil {
 			logging.WithField("error", err.Error()).Error("Failed to return response")
