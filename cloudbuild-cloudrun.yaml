@@ -31,18 +31,6 @@ steps:
       'push',
       'gcr.io/$PROJECT_ID/steamwheedle-cartel/run-workload/runtime'
     ]
-  - name: 'gcr.io/cloud-builders/gcloud'
-    args: [
-      'beta', 'run', 'deploy',
-      'run-workload',
-      '--image', 'gcr.io/$PROJECT_ID/steamwheedle-cartel/run-workload/runtime',
-      '--region', 'us-central1',
-      '--platform', 'managed',
-      '--no-allow-unauthenticated',
-      '--timeout', '120s',
-      '--concurrency', '10',
-      '--memory', '512Mi'
-    ]
 images: [
   'gcr.io/$PROJECT_ID/steamwheedle-cartel/run-workload/build:latest',
   'gcr.io/$PROJECT_ID/steamwheedle-cartel/run-workload/runtime:latest'
