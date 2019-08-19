@@ -194,6 +194,8 @@ func main() {
 
 				return
 			}
+		case codes.NoAction:
+			w.WriteHeader(http.StatusNotModified)
 		default:
 			act.WriteErroneousMessageResponse(w, "State run code was invalid", msg)
 
