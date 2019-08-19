@@ -159,6 +159,100 @@ func main() {
 
 		logging.Info("Sent response")
 	}).Methods("POST")
+	r.HandleFunc("/download-auctions", func(w http.ResponseWriter, r *http.Request) {
+		logging.Info("Received request")
+
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			act.WriteErroneousErrorResponse(w, "Could not read request body", err)
+
+			logging.WithFields(logrus.Fields{
+				"error": err.Error(),
+			}).Error("Could not read request body")
+
+			return
+		}
+
+		tuple, err := sotah.NewRegionRealmTuple(string(body))
+		if err != nil {
+			act.WriteErroneousErrorResponse(w, "Could not parse request body", err)
+
+			logging.WithFields(logrus.Fields{
+				"error": err.Error(),
+			}).Error("Could not parse request body")
+
+			return
+		}
+
+		msg := state.DownloadAuctions(tuple)
+		switch msg.Code {
+		case codes.Ok:
+			w.WriteHeader(http.StatusCreated)
+
+			if _, err := fmt.Fprint(w, msg.Data); err != nil {
+				logging.WithField("error", err.Error()).Error("Failed to return response")
+
+				return
+			}
+		default:
+			act.WriteErroneousMessageResponse(w, "State run code was invalid", msg)
+
+			logging.WithFields(logrus.Fields{
+				"code":  msg.Code,
+				"error": msg.Err,
+				"data":  msg.Data,
+			}).Error("State run code was invalid")
+		}
+
+		logging.Info("Sent response")
+	}).Methods("POST")
+	r.HandleFunc("/compute-live-auctions", func(w http.ResponseWriter, r *http.Request) {
+		logging.Info("Received request")
+
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			act.WriteErroneousErrorResponse(w, "Could not read request body", err)
+
+			logging.WithFields(logrus.Fields{
+				"error": err.Error(),
+			}).Error("Could not read request body")
+
+			return
+		}
+
+		tuple, err := sotah.NewRegionRealmTimestampTuple(string(body))
+		if err != nil {
+			act.WriteErroneousErrorResponse(w, "Could not parse request body", err)
+
+			logging.WithFields(logrus.Fields{
+				"error": err.Error(),
+			}).Error("Could not parse request body")
+
+			return
+		}
+
+		msg := state.ComputeLiveAuctions(tuple)
+		switch msg.Code {
+		case codes.Ok:
+			w.WriteHeader(http.StatusCreated)
+
+			if _, err := fmt.Fprint(w, msg.Data); err != nil {
+				logging.WithField("error", err.Error()).Error("Failed to return response")
+
+				return
+			}
+		default:
+			act.WriteErroneousMessageResponse(w, "State run code was invalid", msg)
+
+			logging.WithFields(logrus.Fields{
+				"code":  msg.Code,
+				"error": msg.Err,
+				"data":  msg.Data,
+			}).Error("State run code was invalid")
+		}
+
+		logging.Info("Sent response")
+	}).Methods("POST")
 	http.Handle("/", r)
 
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), nil))
