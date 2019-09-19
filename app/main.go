@@ -1,4 +1,4 @@
-package app
+package main
 
 import (
 	"fmt"
@@ -9,6 +9,7 @@ import (
 	"strconv"
 
 	"cloud.google.com/go/compute/metadata"
+	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"github.com/sotah-inc/steamwheedle-cartel/pkg/act"
 	"github.com/sotah-inc/steamwheedle-cartel/pkg/logging"
@@ -89,16 +90,78 @@ func init() {
 	logging.Info("Finished init")
 }
 
-func FnWorkload(w http.ResponseWriter, r *http.Request) {
+func main() {
+	r := mux.NewRouter()
+	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		logging.Info("Received request on home route")
 
-	if r.Method != "POST" {
-		w.WriteHeader(http.StatusMethodNotAllowed)
+		w.WriteHeader(http.StatusOK)
+		if _, err := fmt.Fprint(w, "Hello, world!"); err != nil {
+			logging.WithField("error", err.Error()).Error("Failed to return response")
 
-		return
-	}
+			return
+		}
+	})
+	r.HandleFunc("/ping", func(w http.ResponseWriter, r *http.Request) {
+		logging.Info("Received request on ping route")
 
-	switch r.URL.Path {
-	case "/download-auctions":
+		w.WriteHeader(http.StatusOK)
+		if _, err := fmt.Fprint(w, "Pong!"); err != nil {
+			logging.WithField("error", err.Error()).Error("Failed to return response")
+
+			return
+		}
+	})
+	r.HandleFunc("/compute-pricelist-histories", func(w http.ResponseWriter, r *http.Request) {
+		logging.Info("Received request")
+
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			act.WriteErroneousErrorResponse(w, "Could not read request body", err)
+
+			logging.WithFields(logrus.Fields{
+				"error": err.Error(),
+			}).Error("Could not read request body")
+
+			return
+		}
+
+		tuple, err := sotah.NewRegionRealmTimestampTuple(string(body))
+		if err != nil {
+			act.WriteErroneousErrorResponse(w, "Could not parse request body", err)
+
+			logging.WithFields(logrus.Fields{
+				"error": err.Error(),
+			}).Error("Could not parse request body")
+
+			return
+		}
+
+		msg := state.ComputePricelistHistories(tuple)
+		switch msg.Code {
+		case codes.Ok:
+			w.WriteHeader(http.StatusCreated)
+
+			if _, err := fmt.Fprint(w, msg.Data); err != nil {
+				logging.WithField("error", err.Error()).Error("Failed to return response")
+
+				return
+			}
+		default:
+			act.WriteErroneousMessageResponse(w, "State run code was invalid", msg)
+
+			logging.WithFields(logrus.Fields{
+				"code":  msg.Code,
+				"error": msg.Err,
+				"data":  msg.Data,
+			}).Error("State run code was invalid")
+		}
+
+		logging.Info("Sent response")
+	}).Methods("POST")
+	r.HandleFunc("/download-auctions", func(w http.ResponseWriter, r *http.Request) {
+		logging.Info("Received request")
+
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			act.WriteErroneousErrorResponse(w, "Could not read request body", err)
@@ -142,7 +205,12 @@ func FnWorkload(w http.ResponseWriter, r *http.Request) {
 				"data":  msg.Data,
 			}).Error("State run code was invalid")
 		}
-	case "/compute-live-auctions":
+
+		logging.Info("Sent response")
+	}).Methods("POST")
+	r.HandleFunc("/compute-live-auctions", func(w http.ResponseWriter, r *http.Request) {
+		logging.Info("Received request")
+
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			act.WriteErroneousErrorResponse(w, "Could not read request body", err)
@@ -184,49 +252,10 @@ func FnWorkload(w http.ResponseWriter, r *http.Request) {
 				"data":  msg.Data,
 			}).Error("State run code was invalid")
 		}
-	case "/compute-pricelist-histories":
-		body, err := ioutil.ReadAll(r.Body)
-		if err != nil {
-			act.WriteErroneousErrorResponse(w, "Could not read request body", err)
 
-			logging.WithFields(logrus.Fields{
-				"error": err.Error(),
-			}).Error("Could not read request body")
+		logging.Info("Sent response")
+	}).Methods("POST")
+	http.Handle("/", r)
 
-			return
-		}
-
-		tuple, err := sotah.NewRegionRealmTimestampTuple(string(body))
-		if err != nil {
-			act.WriteErroneousErrorResponse(w, "Could not parse request body", err)
-
-			logging.WithFields(logrus.Fields{
-				"error": err.Error(),
-			}).Error("Could not parse request body")
-
-			return
-		}
-
-		msg := state.ComputePricelistHistories(tuple)
-		switch msg.Code {
-		case codes.Ok:
-			w.WriteHeader(http.StatusCreated)
-
-			if _, err := fmt.Fprint(w, msg.Data); err != nil {
-				logging.WithField("error", err.Error()).Error("Failed to return response")
-
-				return
-			}
-		default:
-			act.WriteErroneousMessageResponse(w, "State run code was invalid", msg)
-
-			logging.WithFields(logrus.Fields{
-				"code":  msg.Code,
-				"error": msg.Err,
-				"data":  msg.Data,
-			}).Error("State run code was invalid")
-		}
-	}
-
-	logging.Info("Sent response")
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), nil))
 }
