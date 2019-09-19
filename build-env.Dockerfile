@@ -14,7 +14,6 @@ WORKDIR /srv/app
 
 # copying in source
 COPY ./app /srv/app
-RUN go mod download
 
 # building the project
-RUN go build -o /go/bin/app .
+RUN go build -mod=vendor -o=/go/bin/app .
