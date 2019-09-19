@@ -7,6 +7,5 @@ steps:
       '--source', './app',
       '--memory', '1024MB',
       '--region', 'us-central1',
-      '--timeout', '500s',
-      '--vpc-connector', 'projects/sotah-prod/locations/us-central1/connectors/sotah-connector'
+      '--timeout', '500s'
     ]
